@@ -2,32 +2,39 @@
   stdenv,
   lib,
   makeWrapper,
-  bash,
+  gnat14,
+  gnumake,
+  python311,
+  nodejs,
+  bottom,
+  ripgrep,
+  lazygit,
+  wl-clipboard,
+  nil,
 }:
 ############
 # Packages #
-#########################################################################
+#######################################################################
 let
   iconPath = "icon.png";
-  name = "Exemple Application";
-  comment = "Exemple Application";
+  name = "IDE";
+  comment = "custom lvim launcher";
 in
-# --------------------------------------------------------------------- #
+# ----------------------------------------------------------------- #
 stdenv.mkDerivation (finalAttrs: {
-  pname = "exemple";
-  version = "24.05-15-06-2024";
-  ## ----------------------------------------------------------------- ##
+  pname = "ide";
+  version = "24.05-07-06-2024";
   src = ./src; 
-  ## ----------------------------------------------------------------- ##
+  # ----------------------------------------------------------------- #
   nativeBuildInputs = [ makeWrapper ];
-  ## ----------------------------------------------------------------- ##
   prePatch = ''
     patchShebangs . ;
 
-    substituteInPlace exemple \
-      --replace-fail "exemple-2" "${placeholder "out"}/bin/exemple-2"
+    substituteInPlace ide \
+      --replace-fail "/Applications/ide/nvim" \
+        "${placeholder "out"}/Applications/ide/nvim"
   '';
-  ## ----------------------------------------------------------------- ##
+  # ----------------------------------------------------------------- #
   installPhase = ''
     runHook preInstall
 
@@ -35,7 +42,6 @@ stdenv.mkDerivation (finalAttrs: {
     cp -r ./ $out/Applications/${finalAttrs.pname}/
 
     install -Dm 755 ${finalAttrs.pname} $out/bin/${finalAttrs.pname}
-    install -Dm 755 exemple-2 $out/bin/exemple-2
 
     echo -e "[Desktop Entry]\n" \
       "Type=Application\n" \
@@ -50,19 +56,26 @@ stdenv.mkDerivation (finalAttrs: {
 
     runHook postInstall
   '';
-  ## ----------------------------------------------------------------- ##
+  # ----------------------------------------------------------------- #
   postFixup = ''
-    wrapProgram $out/bin/exemple-2 \
+    wrapProgram $out/bin/${finalAttrs.pname} \
       --prefix PATH : ${lib.makeBinPath [
-        bash
+        gnat14
+        gnumake
+        python311
+        nodejs
+        bottom
+        ripgrep
+        lazygit
+        wl-clipboard
+        nil
       ]}
   '';
-  ## ----------------------------------------------------------------- ##
+  # ----------------------------------------------------------------- #
   meta = {
     description = comment;
-    homepage = "https://github.com/RevoluNix/pkgs-template/";
     maintainers = with lib.maintainers; [ pikatsuto ];
-    licenses = lib.licenses.lgpl2;
+    licenses = lib.licenses.gpl3Plus;
     platforms = lib.platforms.linux;
     mainProgram = finalAttrs.pname;
   };

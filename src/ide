@@ -1,0 +1,25 @@
+#! /usr/bin/env bash
+
+rm -rf ${HOME}/.config/nvim
+cp -r /Applications/ide/nvim ${HOME}/.config/
+sudo chown -R $(id -u):$(id -g) ${HOME}/.config/nvim
+sudo chmod -R 755 ${HOME}/.config/nvim
+
+FolderIdeCommand() {
+  nvim -c "ToggleTerm direction=horizontal" -c "Neotree"
+}
+
+FileIdeCommand() {
+  nvim -c "ToggleTerm direction=horizontal" ${1}
+}
+
+ideCommand="FileIdeCommand ${1}"
+if [ -d "${1}" ] 2> /dev/null; then
+  cd ${1}
+  ideCommand="FolderIdeCommand"
+fi
+if [ "${1}x" == "x" ] 2> /dev/null; then
+  ideCommand="FolderIdeCommand"
+fi
+
+$ideCommand
