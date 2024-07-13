@@ -11,6 +11,8 @@
   lazygit,
   wl-clipboard,
   nil,
+  neovim,
+  ...
 }:
 ############
 # Packages #
@@ -69,6 +71,7 @@ stdenv.mkDerivation (finalAttrs: {
         lazygit
         wl-clipboard
         nil
+        neovim
       ]}
   '';
   # ----------------------------------------------------------------- #
