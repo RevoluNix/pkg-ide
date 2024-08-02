@@ -12,6 +12,7 @@
   wl-clipboard,
   nil,
   neovim,
+  sshfs,
   ...
 }:
 ############
@@ -72,6 +73,7 @@ stdenv.mkDerivation (finalAttrs: {
         wl-clipboard
         nil
         neovim
+        sshfs
       ]}
   '';
   # ----------------------------------------------------------------- #

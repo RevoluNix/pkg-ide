@@ -1,25 +1,64 @@
 #! /usr/bin/env bash
 
-rm -rf ${HOME}/.config/nvim
-cp -r /Applications/ide/nvim ${HOME}/.config/
-sudo chown -R $(id -u):$(id -g) ${HOME}/.config/nvim
-sudo chmod -R 755 ${HOME}/.config/nvim
+sudo rm -rf ${HOME}/.config/nvim
+cp -r \
+  /Applications/ide/nvim \
+  ${HOME}/.config/
+sudo chown -R $(id -u):$(id -g) \
+  ${HOME}/.config/nvim
+sudo chmod -R 755 \
+  ${HOME}/.config/nvim
 
 FolderIdeCommand() {
-  nvim -c "ToggleTerm direction=horizontal" -c "Neotree"
+  nvim \
+    -c "ToggleTerm direction=horizontal" \
+    -c "Neotree"
 }
 
 FileIdeCommand() {
-  nvim -c "ToggleTerm direction=horizontal" ${1}
+  nvim \
+    -c "ToggleTerm direction=horizontal" \
+    ${1}
 }
 
 ideCommand="FileIdeCommand ${1}"
-if [ -d "${1}" ] 2> /dev/null; then
+[[ -d "${1}" && "${1}x" != *"@"* ]] &&
   cd ${1}
+
+[[ -d "${1}" || "${1}x" == "x" ]] &&
   ideCommand="FolderIdeCommand"
-fi
-if [ "${1}x" == "x" ] 2> /dev/null; then
-  ideCommand="FolderIdeCommand"
+
+if [[ "${1}x" == *"@"* ]]; then
+  port=22
+  [[ "${2}x" == "-px" && "${3}x" != "x" ]] &&
+    port="${3}"
+
+  dir="${HOME}/.cache/ide/$(echo ${1} | cut -d ':' -f 2)"
+  mkdir -p ${dir}
+  umount ${dir} 2> /dev/null
+  sshfs -p ${port} ${1} ${dir} || exit
+
+  while ! $(mountpoint -q ${dir}); do
+    sleep 0.5
+  done
+  cd ${dir} 
+ 
+  workDir=$(echo ${1} | cut -d ':' -f 2)
+  sshLogin="$(echo ${1} | cut -d ':' -f 1)"
+  choiceShell="zsh 2> /dev/null || fish 2> /dev/null || bash 2> /dev/null;"
+  sshArgs="bash -c \\\"cd ${workDir}; clear; ${choiceShell}\\\""
+  sshCommand="/usr/bin/env ssh -t -p ${port} ${sshLogin} \"${sshArgs}\""
+  SSHIdeCommand() {
+    nvim \
+      -c "ToggleTerm direction=horizontal dir=~" \
+      -c "Neotree" \
+      -c "TermExec cmd='${sshCommand}'"
+  }
+
+  ideCommand="SSHIdeCommand"
 fi
 
 $ideCommand
+pkill -f $(findmnt -T ${dir} \
+  | grep -v "TARGET" \
+  | cut -d " " -f 2)
